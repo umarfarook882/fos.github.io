@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Fools Of Security are Information Security Enthusiast. We are an Open Source Knowledge sharing platform Relating to Information security and its advancements.">
+  <meta name="author" content="Fools Of Security">
+  <meta name="keywords" content="">
+  <link rel="canonical" href="/waf/2017/05/31/WAF-Rule-to-prevent-WordPress-from-0-day-Attack.html">
+  <title> Fools Of Security&ensp;| WAF Rule to prevent WordPress from 0-day Attack</title>
+
+  <!-- Bootstrap Core CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+
+  <!-- Custom CSS -->
+  <link href="/css/grayscale.css" rel="stylesheet"><!-- Custom Fonts -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+  <link href="//fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic" rel="stylesheet" type="text/css">
+  <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/rrssb.css" />
+  <link rel="stylesheet" href="/css/custom.css" />
+  <meta name="theme-color" content="#000000">
+  <!-- Windows Phone -->
+  <meta name="msapplication-navbutton-color" content="#000000">
+  <!-- iOS Safari -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+<!-- Syntax highlight in post pages -->
+  <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.2/styles/monokai_sublime.min.css"></head>
+<body>
+<nav class="navbar navbar-custom navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-main-collapse">
+        <i class="fa fa-bars"></i>
+      </button><a class="navbar-brand" href="/"><div><img src="/img/fos-border.ico" alt=""> Fools Of Security
+          </div>
+        </a>
+    </div>
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse navbar-right navbar-main-collapse">
+      <ul class="nav navbar-nav"><!-- Blog, Post, Tag and Error pages --><li><a href="/#about"> About </a></li><li><a href="/blog/"> Blog </a></li><li><a href="/video/"> Video </a></li><li><a href="/#timeline"> Timeline </a></li><li><a href="/project/"> Project </a></li><li><a href="/#contact"> Contact </a></li></ul>
+    </div>
+  </div>
+</nav>
+
+<section id="post" class="container content-section text-center">
+      <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+          <h1><strong>WAF Rule to prevent WordPress from 0-day Attack</strong></h1>
+          <h4>
+            <strong>31 May 2017</strong>
+            <small>
+              . category:
+              <a class="category" href="/categories/waf.html">
+                waf
+              </a>.
+              <a href="/waf/2017/05/31/WAF-Rule-to-prevent-WordPress-from-0-day-Attack.html#disqus_thread">Comments</a>
+              <br /><a class="tag" href="/tags/tutorial.html">#tutorial</a></small>
+          </h4>
+
+          <section class="text-justify">
+            <p><strong>(CVE-2017-8295) Wordpress &lt;= 4.7.4 - Unauthorized Password Reset Vulnerability</strong></p>
+
+<p>By default, WordPress is using an untrusted data to create a password reset link. That is supposed to be delivered only to the email address associated with the owner’s account.</p>
+
+<p>If the From email header is not present WordPress will use the server one.</p>
+
+<p><em>See wp-includes/pluggable.php</em></p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>  if ( !isset( $from_email ) ) { 
+  // Get the site domain and get rid of www. 
+  $sitename = strtolower( $_SERVER['SERVER_NAME'] ); 
+  if ( substr( $sitename, 0, 4 ) == 'www.' ) { 
+  $sitename = substr( $sitename, 4 );
+  } 
+  $from_email = 'wordpress@' . $sitename; 
+  } 
+</code></pre>
+</div>
+
+<p><br />
+<strong>How the attack works?</strong></p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>1.The attacker makes their request to the “forgot password?” function.
+2.In the request, they set the “Host” http header to a domain they control. (let’s call it fos.org)
+3.The WordPress software generates an email with the secret link that will reset a user’s password. It looks up who it should send the email as (e.g.. the “From” field) by looking at the value in PHP of $_SERVER[‘SERVER_NAME’] which just so happens to be set by the “Host” http header field. Normally this would be your site’s domain, but in event of this attack the email “From” field will be wordpress@fos.org.   
+4.The email with secret key is queued for delivery to the WordPress user’s email address.
+5.Somehow (be it a bad email address, full inbox, or maybe even an away from office message that includes the original email) the email gets a response which includes the  original message and is delivered to the listed “From” field.
+6.The reply is delivered to the attacker’s inbox, they are then able to use the secret link and log in to the WordPress user’s account.   &lt;br&gt;
+</code></pre>
+</div>
+
+<p><br /> 
+<strong>How to prevent WordPress from 0-day attack by WAF rule?</strong></p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>1.Analyse the vulnerability and draft a overview of the exploit process. 
+2.Find out which parameter or header is need  for this exploit to work. 
+</code></pre>
+</div>
+
+<p><br />
+<strong>Actual Request:</strong></p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>  POST /waf-demo/wp-login.php?action=lostpassword HTTP/1.1
+  Host: 127.0.0.1
+  User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:53.0) Gecko/20100101 Firefox/53.0
+  Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+  Accept-Language: en-US,en;q=0.5
+  Accept-Encoding: gzip, deflate
+  Content-Type: application/x-www-form-urlencoded
+  Content-Length: 76
+  Referer: http://127.0.0.1/waf-demo/wp-login.php?action=lostpassword
+  Cookie: wp-settings-time-1=1496252396; wordpress_test_cookie=WP+Cookie+check
+  Connection: close
+  Upgrade-Insecure-Requests: 1
+
+  user_login=fos%40gmail.com&amp;redirect_to=&amp;wp-submit=Get+New+Password
+</code></pre>
+</div>
+
+<p><br />
+<strong>Edited Request (Attack Scenario)</strong></p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>  POST /waf-demo/wp-login.php?action=lostpassword HTTP/1.1
+  Host: fos.org
+  User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:53.0) Gecko/20100101 Firefox/53.0
+  Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+  Accept-Language: en-US,en;q=0.5
+  Accept-Encoding: gzip, deflate
+  Content-Type: application/x-www-form-urlencoded
+  Content-Length: 76
+  Referer: http://127.0.0.1/waf-demo/wp-login.php?action=lostpassword
+  Cookie: wp-settings-time-1=1496252396; wordpress_test_cookie=WP+Cookie+check
+  Connection: close
+  Upgrade-Insecure-Requests: 1
+
+  user_login=fos%40gmail.com&amp;redirect_to=&amp;wp-submit=Get+New+Password 
+</code></pre>
+</div>
+
+<p><br /></p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>3.As in our case HOST (http Header) is one where attacker try to change the Host name for this exploit to work. 
+4.I have written a rule to check the Host Header, whenever the user requesting for resetting the  password for admin account.               So if host header  doesn't it match with actual host name. WAF will block it with status:403. 
+</code></pre>
+</div>
+
+<p><br /></p>
+
+<h3 id="demo-video">Demo Video</h3>
+
+<p><a href="https://www.youtube.com/watch?v=YFAHkS24EPY"><img src="https://img.youtube.com/vi/YFAHkS24EPY/0.jpg" alt="Alt text" /></a></p>
+
+
+          </section>
+          <br><div class="sharing">
+    <br/>
+    <br/>
+    <ul>
+        <li><i class="fa fa-share-square-o"></i></li>
+        
+        <li><a href="mailto:?subject=WAF Rule to prevent WordPress from 0-day Attack&body=http://foolsofsecurity.com/waf/2017/05/31/WAF-Rule-to-prevent-WordPress-from-0-day-Attack.html" rel="nofollow" target="_blank" title="Share on Email">
+                <i class="fa fa-envelope-square"></i>
+        </a></li>
+        
+        
+        <li><a href="http://www.linkedin.com/shareArticle?url=http://foolsofsecurity.com/waf/2017/05/31/WAF-Rule-to-prevent-WordPress-from-0-day-Attack.html&title=WAF Rule to prevent WordPress from 0-day Attack" rel="nofollow" target="_blank" title="Share on LinkedIn">
+                <i class="fa fa-linkedin-square"></i>
+        </a></li>
+        
+        
+        <li><a href="https://twitter.com/intent/tweet?text=WAF Rule to prevent WordPress from 0-day Attack&url=http://foolsofsecurity.com/waf/2017/05/31/WAF-Rule-to-prevent-WordPress-from-0-day-Attack.html" rel="nofollow" target="_blank" title="Share on Twitter">
+                <i class="fa fa-twitter-square"></i>
+        </a></li>
+        
+        
+        <li><a href="https://facebook.com/sharer.php?u=http://foolsofsecurity.com/waf/2017/05/31/WAF-Rule-to-prevent-WordPress-from-0-day-Attack.html" rel="nofollow" target="_blank" title="Share on Facebook">
+                <i class="fa fa-facebook-square"></i>
+        </a></li>
+        
+
+        
+        <li><a href="https://plus.google.com/share?url=http://foolsofsecurity.com/waf/2017/05/31/WAF-Rule-to-prevent-WordPress-from-0-day-Attack.html" rel="nofollow" target="_blank" title="Share on Google+">
+                <i class="fa fa-google-plus-square"></i>
+        </a></li>
+        
+
+        
+        <li><a href="http://reddit.com/submit?url=http://foolsofsecurity.com/waf/2017/05/31/WAF-Rule-to-prevent-WordPress-from-0-day-Attack.html&title=WAF Rule to prevent WordPress from 0-day Attack" rel="nofollow" target="_blank" title="Share on Reddit">
+                <i class="fa fa-reddit-square"></i>
+        </a></li>
+        
+        
+        <li><a href="https://pinterest.com/pin/create/button/?url=http://foolsofsecurity.com/waf/2017/05/31/WAF-Rule-to-prevent-WordPress-from-0-day-Attack.html" rel="nofollow" target="_blank" title="Share on Pinterest">
+                <i class="fa fa-pinterest-square"></i>
+        </a></li>
+        
+    </ul>
+</div>
+<br/>
+<br/><div id="disqus_thread"></div>
+  <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript><hr /><div class="author row">
+            <img class="col-xs-4 col-sm-3 col-md-2" src="/img/author.png" alt="Me" />
+            <p class="col-xs-8 col-sm-9 col-md-10">
+              Umar Farook is an Security Researcher & AppSec Enthusiast. He always approach App Security with innovative ideas  to explore and prevent Modern web application attacks. In spare time, he work on scrapying data from website and automating AppSec with Python.
+            </p>
+          </div></div>
+      </div>
+    </section>
+<footer>
+    <br>
+<ul class="list-inline social-buttons"><li><a href="https://github.com/umarfarook882" target="_blank"><i class="fa fa-github fa-fw"></i></a></li><li><a href="https://www.youtube.com/channel/UCEBHO0kD1WFvIhf9wBCU-VQ" target="_blank"><i class="fa fa-youtube-play fa-fw"></i></a></li><li><a href="http://fosecurity.blogspot.in/" target="_blank"><i class="fa fa-globe fa-fw"></i></a></li></ul>
+
+<p><br></p>
+    <div class="container text-center">
+        <p>Copyright &copy; Fools Of Security 2017</p><p style="font-size: 16px;"><a href="https://zerobin.net/?f1744fd662ccc911#AknpWQMXs3ZSDTvvgLTD67W7D9PrlI5vv06zDDG217I=" target="_blank"><i
+                class="fa fa-key"></i> Fools of Security via PGP</a></p></div>
+</footer>
+
+<!-- Javascript Start -->
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+
+<!-- Bootstrap Core JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
+<!-- Plugin JavaScript -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min.js"></script>
+
+<script>
+function toggleNavCollapse(){50<$(".navbar").offset().top?$(".navbar-fixed-top").addClass("top-nav-collapse"):$(".navbar-fixed-top").removeClass("top-nav-collapse");}
+$(document).ready(toggleNavCollapse);
+$(window).scroll(toggleNavCollapse);$(function(){$("a.page-scroll").bind("click",function(b){var a=$(this);$("html, body").stop().animate({scrollTop:$(a.attr("href")).offset().top-50},1500,"easeInOutExpo",function(){a.blur()});b.preventDefault()})});$(".navbar-collapse ul li a").click(function(){$(".navbar-toggle:visible").click()});
+</script><script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.2/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+    <script type="text/javascript">
+    var disqus_shortname = 'foolsofsecurity-com';
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+    </script>
+  <script src="/js/rrssb.min.js"></script><script>
+function addTohistory() {
+  if (!window.location.host.startsWith("127.0.0.1")) {
+    history.pushState({}, 'WAF Rule to prevent WordPress from 0-day Attack', 'http://foolsofsecurity.com/waf/2017/05/31/WAF-Rule-to-prevent-WordPress-from-0-day-Attack.html');
+  }
+}
+</script>
+
+<!-- Javascript End -->
+</body>
+</html>
+

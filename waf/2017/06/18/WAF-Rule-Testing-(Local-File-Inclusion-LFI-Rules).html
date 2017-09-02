@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Fools Of Security are Information Security Enthusiast. We are an Open Source Knowledge sharing platform Relating to Information security and its advancements.">
+  <meta name="author" content="Fools Of Security">
+  <meta name="keywords" content="">
+  <link rel="canonical" href="/waf/2017/06/18/WAF-Rule-Testing-(Local-File-Inclusion-LFI-Rules).html">
+  <title> Fools Of Security&ensp;| WAF Rule Testing (Local File Inclusion-LFI Rules)</title>
+
+  <!-- Bootstrap Core CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+
+  <!-- Custom CSS -->
+  <link href="/css/grayscale.css" rel="stylesheet"><!-- Custom Fonts -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+  <link href="//fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic" rel="stylesheet" type="text/css">
+  <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/rrssb.css" />
+  <link rel="stylesheet" href="/css/custom.css" />
+  <meta name="theme-color" content="#000000">
+  <!-- Windows Phone -->
+  <meta name="msapplication-navbutton-color" content="#000000">
+  <!-- iOS Safari -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+<!-- Syntax highlight in post pages -->
+  <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.2/styles/monokai_sublime.min.css"></head>
+<body>
+<nav class="navbar navbar-custom navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-main-collapse">
+        <i class="fa fa-bars"></i>
+      </button><a class="navbar-brand" href="/"><div><img src="/img/fos-border.ico" alt=""> Fools Of Security
+          </div>
+        </a>
+    </div>
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse navbar-right navbar-main-collapse">
+      <ul class="nav navbar-nav"><!-- Blog, Post, Tag and Error pages --><li><a href="/#about"> About </a></li><li><a href="/blog/"> Blog </a></li><li><a href="/video/"> Video </a></li><li><a href="/#timeline"> Timeline </a></li><li><a href="/project/"> Project </a></li><li><a href="/#contact"> Contact </a></li></ul>
+    </div>
+  </div>
+</nav>
+
+<section id="post" class="container content-section text-center">
+      <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+          <h1><strong>WAF Rule Testing (Local File Inclusion-LFI Rules)</strong></h1>
+          <h4>
+            <strong>18 Jun 2017</strong>
+            <small>
+              . category:
+              <a class="category" href="/categories/waf.html">
+                waf
+              </a>.
+              <a href="/waf/2017/06/18/WAF-Rule-Testing-(Local-File-Inclusion-LFI-Rules).html#disqus_thread">Comments</a>
+              <br /><a class="tag" href="/tags/tutorial.html">#tutorial</a></small>
+          </h4>
+
+          <section class="text-justify">
+            <p>Testing Local File Inclusion (LFI)  attack on vulnerable application with OWASP CRS &amp;&amp; CWAF Ruleset 1.127 (latest version).</p>
+
+<p><strong>Testing LFI attack on OWASP CRS</strong></p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code> Include the OWASP CRS on apache config:
+ #REQUEST-930-APPLICATION-ATTACK-LFI
+ #PARANOIA_LEVEL:1
+ #rule ID:930100,930110,930120,930130
+
+ Test these following payloads on the xvwa vulnerable application for Local File Inclusion (LFI) attack.
+ 
+    /var/mail/www-data
+    /etc/network/* i.e /etc/network/interfaces
+    /etc/init/* i.e /etc/init/anacron.conf
+
+ As a result, OWASP CRS failed to block the user from accessing the above sensitive path or file, but it block almost ever major LFI attacks. 
+ 
+ Check the demo video to know more :)
+</code></pre>
+</div>
+
+<p><br />
+<strong>Testing LFI attack on CWAF Ruleset</strong></p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code> Include the CWAF ruleset on apache config:
+ 
+ Test these following payloads on the xvwa vulnerable application for Local File Inclusion (LFI) attack.
+    /var/mail/www-data
+    /usr/share/apache2/* i.e /usr/share/apache2/build/config.nice
+    /usr/share/php5/mysql/mysql.ini
+
+  As a resut, CWAF failed to block the user from accessing the above sensitive path or file, but it block all other LFI attack on application and it show FP on LFI payloads.
+  
+  Check the demo video to know more :)
+</code></pre>
+</div>
+
+<p><br /></p>
+<h3 id="demo-video">Demo Video</h3>
+
+<p><a href="https://www.youtube.com/watch?v=dU9pShTKq_w"><img src="https://img.youtube.com/vi/dU9pShTKq_w/0.jpg" alt="Alt text" /></a></p>
+
+<h3 id="useful-links">Useful links:</h3>
+<ol>
+  <li><a href="www.modsecurity.com/">Modsecurity</a></li>
+  <li><a href="https://www.kali.org/">Kali</a></li>
+  <li><a href="https://www.debuggex.com/">Debuggex</a></li>
+  <li><a href="https://www.owasp.org/index.php/OWASP_Mutillidae_2_Project">OWASP Mutillidae Vulnerable App</a></li>
+  <li><a href="https://github.com/s4n7h0/xvwa">XVWA</a></li>
+</ol>
+
+
+          </section>
+          <br><div class="sharing">
+    <br/>
+    <br/>
+    <ul>
+        <li><i class="fa fa-share-square-o"></i></li>
+        
+        <li><a href="mailto:?subject=WAF Rule Testing (Local File Inclusion-LFI Rules)&body=http://foolsofsecurity.com/waf/2017/06/18/WAF-Rule-Testing-(Local-File-Inclusion-LFI-Rules).html" rel="nofollow" target="_blank" title="Share on Email">
+                <i class="fa fa-envelope-square"></i>
+        </a></li>
+        
+        
+        <li><a href="http://www.linkedin.com/shareArticle?url=http://foolsofsecurity.com/waf/2017/06/18/WAF-Rule-Testing-(Local-File-Inclusion-LFI-Rules).html&title=WAF Rule Testing (Local File Inclusion-LFI Rules)" rel="nofollow" target="_blank" title="Share on LinkedIn">
+                <i class="fa fa-linkedin-square"></i>
+        </a></li>
+        
+        
+        <li><a href="https://twitter.com/intent/tweet?text=WAF Rule Testing (Local File Inclusion-LFI Rules)&url=http://foolsofsecurity.com/waf/2017/06/18/WAF-Rule-Testing-(Local-File-Inclusion-LFI-Rules).html" rel="nofollow" target="_blank" title="Share on Twitter">
+                <i class="fa fa-twitter-square"></i>
+        </a></li>
+        
+        
+        <li><a href="https://facebook.com/sharer.php?u=http://foolsofsecurity.com/waf/2017/06/18/WAF-Rule-Testing-(Local-File-Inclusion-LFI-Rules).html" rel="nofollow" target="_blank" title="Share on Facebook">
+                <i class="fa fa-facebook-square"></i>
+        </a></li>
+        
+
+        
+        <li><a href="https://plus.google.com/share?url=http://foolsofsecurity.com/waf/2017/06/18/WAF-Rule-Testing-(Local-File-Inclusion-LFI-Rules).html" rel="nofollow" target="_blank" title="Share on Google+">
+                <i class="fa fa-google-plus-square"></i>
+        </a></li>
+        
+
+        
+        <li><a href="http://reddit.com/submit?url=http://foolsofsecurity.com/waf/2017/06/18/WAF-Rule-Testing-(Local-File-Inclusion-LFI-Rules).html&title=WAF Rule Testing (Local File Inclusion-LFI Rules)" rel="nofollow" target="_blank" title="Share on Reddit">
+                <i class="fa fa-reddit-square"></i>
+        </a></li>
+        
+        
+        <li><a href="https://pinterest.com/pin/create/button/?url=http://foolsofsecurity.com/waf/2017/06/18/WAF-Rule-Testing-(Local-File-Inclusion-LFI-Rules).html" rel="nofollow" target="_blank" title="Share on Pinterest">
+                <i class="fa fa-pinterest-square"></i>
+        </a></li>
+        
+    </ul>
+</div>
+<br/>
+<br/><div id="disqus_thread"></div>
+  <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript><hr /><div class="author row">
+            <img class="col-xs-4 col-sm-3 col-md-2" src="/img/author.png" alt="Me" />
+            <p class="col-xs-8 col-sm-9 col-md-10">
+              Umar Farook is an Security Researcher & AppSec Enthusiast. He always approach App Security with innovative ideas  to explore and prevent Modern web application attacks. In spare time, he work on scrapying data from website and automating AppSec with Python.
+            </p>
+          </div></div>
+      </div>
+    </section>
+<footer>
+    <br>
+<ul class="list-inline social-buttons"><li><a href="https://github.com/umarfarook882" target="_blank"><i class="fa fa-github fa-fw"></i></a></li><li><a href="https://www.youtube.com/channel/UCEBHO0kD1WFvIhf9wBCU-VQ" target="_blank"><i class="fa fa-youtube-play fa-fw"></i></a></li><li><a href="http://fosecurity.blogspot.in/" target="_blank"><i class="fa fa-globe fa-fw"></i></a></li></ul>
+
+<p><br></p>
+    <div class="container text-center">
+        <p>Copyright &copy; Fools Of Security 2017</p><p style="font-size: 16px;"><a href="https://zerobin.net/?f1744fd662ccc911#AknpWQMXs3ZSDTvvgLTD67W7D9PrlI5vv06zDDG217I=" target="_blank"><i
+                class="fa fa-key"></i> Fools of Security via PGP</a></p></div>
+</footer>
+
+<!-- Javascript Start -->
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+
+<!-- Bootstrap Core JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
+<!-- Plugin JavaScript -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min.js"></script>
+
+<script>
+function toggleNavCollapse(){50<$(".navbar").offset().top?$(".navbar-fixed-top").addClass("top-nav-collapse"):$(".navbar-fixed-top").removeClass("top-nav-collapse");}
+$(document).ready(toggleNavCollapse);
+$(window).scroll(toggleNavCollapse);$(function(){$("a.page-scroll").bind("click",function(b){var a=$(this);$("html, body").stop().animate({scrollTop:$(a.attr("href")).offset().top-50},1500,"easeInOutExpo",function(){a.blur()});b.preventDefault()})});$(".navbar-collapse ul li a").click(function(){$(".navbar-toggle:visible").click()});
+</script><script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.2/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+    <script type="text/javascript">
+    var disqus_shortname = 'foolsofsecurity-com';
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+    </script>
+  <script src="/js/rrssb.min.js"></script><script>
+function addTohistory() {
+  if (!window.location.host.startsWith("127.0.0.1")) {
+    history.pushState({}, 'WAF Rule Testing (Local File Inclusion-LFI Rules)', 'http://foolsofsecurity.com/waf/2017/06/18/WAF-Rule-Testing-(Local-File-Inclusion-LFI-Rules).html');
+  }
+}
+</script>
+
+<!-- Javascript End -->
+</body>
+</html>
+
